@@ -4,7 +4,7 @@ import Calculator from './components/Calculator'
 
 function App() {
   return (
-    <Calculator title="Free Bet Calculator" numRows={3} numCols={3}></Calculator>
+    <Calculator title="Free Bet Calculator"></Calculator>
   )
 }
 

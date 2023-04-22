@@ -1,6 +1,5 @@
 import React, {
   ChangeEvent,
-  SyntheticEvent,
   useCallback,
   useEffect,
   useRef,
@@ -10,8 +9,6 @@ import "./Calculator.css";
 
 interface Props {
   title: string;
-  numRows: number;
-  numCols: number;
 }
 
 /*
@@ -19,7 +16,7 @@ We want to keep the rounded values that appear on the screen separate from the a
 The rounded values will also be formatted with +, -, $ and % and formatted to a constant number of decimal places.
 */
 
-const Calculator = ({ title, numRows, numCols }: Props) => {
+const Calculator = ({ title }: Props) => {
   const initFreeBetOdds = -110;
   const initFreeBetAmount = "$ 10";
   const initHedgeBetOdds = -110;
