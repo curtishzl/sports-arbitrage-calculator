@@ -124,7 +124,7 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
   // Recalculates percent conversion, payout and profit when hedge bet amount is updated
   useEffect(() => {
     const payout = getPayout(values.hedgeBetOdds, values.hedgeBetAmount);
-    const profit = getProfit(values.payout, values.hedgeBetAmount);
+    const profit = getProfit(payout, values.hedgeBetAmount);
     //const percent = (profit / values.freeBetAmount) * 100;  // Div by 0 when FBA is 0
     setValues({
       ...values,
