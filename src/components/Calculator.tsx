@@ -1,4 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
+import "./Calculator.css";
 
 interface Props {
   title: string;
@@ -6,56 +7,66 @@ interface Props {
   numCols: number;
 }
 
-// function getHedgeAmount() {}
+/*
+We want to keep the rounded values that appear on the screen separate from the actual values which are more precise.
+The rounded values will also be formatted with +, -, $ and % and formatted to a constant number of decimal places.
+*/
 
 const Calculator = ({ title, numRows, numCols }: Props) => {
+  const initFreeBetOdds = -110;
+  const initHedgeBetOdds = -110;
   const [values, setValues] = useState({
-    freeBetOdds: -110,
-    freeBetAmount: 0.0,
-    hedgeBetOdds: -110,
-    hedgeBetAmount: 0.0,
-    percentConversion: 0.0,
-    payout: 0.0,
-    profit: 0.0,
+    freeBetOdds: initFreeBetOdds,
+    freeBetAmount: "$ ",
+    hedgeBetOdds: initHedgeBetOdds,
+    hedgeBetAmount: 0,
+    percentConversion: getPercentConversion(initFreeBetOdds, initHedgeBetOdds),
+    payout: 0,
+    profit: 0,
   });
 
   // Updates the text field that the user inputs a new number into.
   // Does not recalculate - useEffect does this.
   const handleValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
-    setValues({ ...values, [name]: value });
-    // setValues(event.target.value ? parseInt(event.target.value) : 0);
+    if (name === "freeBetAmount") {
+        const regex = /^\$ (\d*?\.?\d{0,2})$/;  // Matches a dollar value
+        if (regex.test(value) || value === '') {
+          setValues({ ...values, [name]: value });
+        }
+    }
+    else {
+      setValues({ ...values, [name]: value });
+      // [name] is a computed property that takes on the value of name in event.target. 
+      // If we were to call setValues({ ...values, name: +value });, it would update the value in values that is actually called name, which doesn't exist here.
+    }
   };
 
   // Recalculates hedge bet amount based on new user input
-  // Listens for a change to any of the values in the dependency array.
-  // In this case, any change to any of the values in the state object `values` will trigger an update.
   useEffect(() => {
     try {
-      const hedge = roundCurrency(
-        ((a2e(values.freeBetOdds) - 1) * values.freeBetAmount) /
-          a2e(values.hedgeBetOdds)
-      );
+      const hedge =
+        ((a2e(values.freeBetOdds) - 1) * Number(values.freeBetAmount.substring(2))) /
+        a2e(values.hedgeBetOdds);
+      const percent = getPercentConversion(values.freeBetOdds, values.hedgeBetOdds);
       setValues({
         ...values,
         hedgeBetAmount: hedge,
+        percentConversion: percent,
       });
     } catch {
       // If improper American odds have been entered
       values.hedgeBetAmount = 0.0;
     }
-  }, [values.freeBetOdds, values.hedgeBetOdds, values.freeBetAmount]);
+  }, [values.freeBetOdds, values.hedgeBetOdds, values.freeBetAmount]); // Listens for a change to any of the values in the dependency array.
 
   // Recalculates percent conversion, payout and profit when hedge bet amount is updated
   useEffect(() => {
-    const payout = roundCurrency(
-      a2e(values.hedgeBetOdds) * values.hedgeBetAmount
-    );
-    const profit = roundCurrency(payout - values.hedgeBetAmount);
-    const percent = Number(((profit / values.freeBetAmount) * 100).toFixed(2));
+    const payout = a2e(values.hedgeBetOdds) * values.hedgeBetAmount;
+    const profit = payout - values.hedgeBetAmount;
+    //const percent = (profit / values.freeBetAmount) * 100;  // Div by 0 when FBA is 0
     setValues({
       ...values,
-      percentConversion: percent,
       payout: payout,
       profit: profit,
     });
@@ -68,14 +79,31 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
     } else if (american < -100) {
       return (-american + 100) / -american;
     } else {
+      return 0;
       throw new Error(
         "American odds must be greater than or equal to +100, or strictly less than -100."
       );
     }
   }
 
-  function roundCurrency(amt: number): number {
-    return Number(amt.toFixed(2));
+  function roundCurrency(amt: number, round=true): string {
+    const rounded = Number(amt.toFixed(2));
+    if (!round) {
+      return "$ " + amt;
+    }
+    else if (rounded % 1 === 0) {
+      return "$ " + rounded;
+    }
+    else {
+      return "$ " + amt.toFixed(2);
+    }
+  }
+
+  function getPercentConversion(
+    freeBetOdds: number,
+    hedgeBetOdds: number
+  ): number {
+    return (a2e(freeBetOdds) - 1) * (1 - 1 / a2e(hedgeBetOdds)) * 100; // Calculates % using only the given odds
   }
 
   return (
@@ -103,10 +131,10 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
             </td>
             <td>
               <input
-                type="number"
+                type="text"
                 name="freeBetAmount"
-                placeholder="$0.00"
-                value={values.freeBetAmount || ""}
+                placeholder="$ 0"
+                value={values.freeBetAmount}
                 onChange={handleValueChange}
               ></input>
             </td>
@@ -124,10 +152,10 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
             </td>
             <td>
               <input
-                type="number"
+                type="text"
                 name="hedgeBetAmount"
-                placeholder="$0.00"
-                value={values.hedgeBetAmount || ""}
+                placeholder="$ 0"
+                value={roundCurrency(values.hedgeBetAmount) || ""}
                 readOnly
               ></input>
             </td>
@@ -147,30 +175,30 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
           <tr>
             <td>
               <input
-                type="number"
+                type="text"
                 name="percentConversion"
-                placeholder="0.00%"
-                value={values.percentConversion || ""}
+                placeholder="0 %"
+                value={(values.percentConversion.toFixed(2) || "--") + " %"}
                 onChange={handleValueChange}
                 readOnly
               ></input>
             </td>
             <td>
               <input
-                type="number"
+                type="text"
                 name="payout"
-                placeholder="$0.00"
-                value={values.payout || ""}
+                placeholder="$ 0"
+                value={roundCurrency(values.payout) || ""}
                 onChange={handleValueChange}
                 readOnly
               ></input>
             </td>
             <td>
               <input
-                type="number"
+                type="text"
                 name="profit"
-                placeholder="$0.00"
-                value={values.profit || ""}
+                placeholder="$ 0"
+                value={roundCurrency(values.profit) || ""}
                 onChange={handleValueChange}
                 readOnly
               ></input>
