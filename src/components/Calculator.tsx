@@ -87,7 +87,12 @@ const Calculator = ({ title, numRows, numCols }: Props) => {
       if (event.key === "Enter" && nextInputRef.current) {
         event.preventDefault();
         nextInputRef.current.focus();
-        nextInputRef.current.select();
+        if (nextInputRef.current.name === "freeBetAmount") {  // HARDCODED - FIX FOR REUSABILITY
+          nextInputRef.current.setSelectionRange(2, nextInputRef.current.value.length);
+        }
+        else {
+          nextInputRef.current.select();
+        }
       }
     },
     []
