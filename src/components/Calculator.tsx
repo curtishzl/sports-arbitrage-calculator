@@ -18,7 +18,7 @@ The rounded values will also be formatted with +, -, $ and % and formatted to a 
 
 const Calculator = ({ title }: Props) => {
   const initFreeBetOdds = -110;
-  const initFreeBetAmount = "$ 10";
+  const initFreeBetAmount = "$ 10"; // Stored as string because of $ inside editable textfield
   const initHedgeBetOdds = -110;
   const initHedgeBetAmount = getHedgeAmount(
     initFreeBetOdds,
@@ -40,22 +40,6 @@ const Calculator = ({ title }: Props) => {
     payout: initPayout,
     profit: initProfit,
   });
-
-  // Updates the text field that the user inputs a new number into.
-  // Does not recalculate - useEffect does this.
-  const handleValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    const { name, value } = event.target;
-    if (name === "freeBetAmount") {
-      const regex = /^\$ (\d*?\.?\d{0,2})$/; // Matches a dollar value
-      if (regex.test(value) || value === "") {
-        setValues({ ...values, [name]: value });
-      }
-    } else {
-      setValues({ ...values, [name]: value });
-      // [name] is a computed property that takes on the value of name in event.target.
-      // If we were to call setValues({ ...values, name: +value });, it would update the value in values that is actually called name, which doesn't exist here.
-    }
-  };
 
   // Selects the whole textfield on click for easier input
   const handleInputClick = useCallback(
@@ -84,10 +68,13 @@ const Calculator = ({ title }: Props) => {
       if (event.key === "Enter" && nextInputRef.current) {
         event.preventDefault();
         nextInputRef.current.focus();
-        if (nextInputRef.current.name === "freeBetAmount") {  // HARDCODED - FIX FOR REUSABILITY
-          nextInputRef.current.setSelectionRange(2, nextInputRef.current.value.length);
-        }
-        else {
+        if (nextInputRef.current.name === "freeBetAmount") {
+          // HARDCODED - FIX FOR REUSABILITY
+          nextInputRef.current.setSelectionRange(
+            2,
+            nextInputRef.current.value.length
+          );
+        } else {
           nextInputRef.current.select();
         }
       }
@@ -95,34 +82,49 @@ const Calculator = ({ title }: Props) => {
     []
   );
 
-  // Recalculates hedge bet amount based on new user input
+  // Updates the text field that the user inputs a new number into.
+  // Does not recalculate - useEffect does this.
+  const handleValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const { name, value } = event.target;
+    if (name === "freeBetAmount") {
+      const regex = /^\$ (\d*?\.?\d{0,2})$/; // Matches a dollar value
+      if (regex.test(value) || value === "") {
+        setValues({ ...values, [name]: value });
+      }
+    } else {
+      setValues({ ...values, [name]: value });
+      // [name] is a computed property that takes on the value of name in event.target.
+      // If we were to call setValues({ ...values, name: +value });, it would update the value in values that is actually called name, which doesn't exist here.
+    }
+  };
+
+  // Recalculates hedge bet amount and percent conversion based on new user input
   useEffect(() => {
+    let hedge = 0;
+    let percent = 0;
     try {
-      const hedge = getHedgeAmount(
+      hedge = getHedgeAmount(
         values.freeBetOdds,
         values.freeBetAmount,
         values.hedgeBetOdds
       );
-      const percent = getPercentConversion(
-        values.freeBetOdds,
-        values.hedgeBetOdds
-      );
-      setValues({
-        ...values,
-        hedgeBetAmount: hedge,
-        percentConversion: percent,
-      });
-    } catch {
-      // If improper American odds have been entered
-      values.hedgeBetAmount = 0.0;
-    }
+      percent = getPercentConversion(values.freeBetOdds, values.hedgeBetOdds);
+    } catch (error) {} // If improper American odds have been entered
+    setValues({
+      ...values,
+      hedgeBetAmount: hedge,
+      percentConversion: percent,
+    });
   }, [values.freeBetOdds, values.hedgeBetOdds, values.freeBetAmount]); // Listens for a change to any of the values in the dependency array.
 
-  // Recalculates percent conversion, payout and profit when hedge bet amount is updated
+  // Recalculates payout and profit when hedge bet amount is updated
   useEffect(() => {
-    const payout = getPayout(values.hedgeBetOdds, values.hedgeBetAmount);
-    const profit = getProfit(payout, values.hedgeBetAmount);
-    //const percent = (profit / values.freeBetAmount) * 100;  // Div by 0 when FBA is 0
+    let payout = 0;
+    let profit = 0;
+    try {
+      payout = getPayout(values.hedgeBetOdds, values.hedgeBetAmount);
+      profit = getProfit(payout, values.hedgeBetAmount);
+    } catch (error) {} // If improper American odds have been entered
     setValues({
       ...values,
       payout: payout,
@@ -137,11 +139,14 @@ const Calculator = ({ title }: Props) => {
     } else if (american < -100) {
       return (-american + 100) / -american;
     } else {
-      return 0;
       throw new Error(
         "American odds must be greater than or equal to +100, or strictly less than -100."
       );
     }
+  }
+
+  function illegalOdds(odds: number): boolean {
+    return false;
   }
 
   function roundCurrency(amt: number, round = true): string {
