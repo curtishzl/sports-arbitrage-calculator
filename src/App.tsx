@@ -1,11 +1,14 @@
-import './App.css'
-import './components/Calculator'
-import Calculator from './components/Calculator'
+import "./App.css";
+import Calculator from "./components/Calculator";
+import Tabs from "./components/tab_component/Tabs";
 
 function App() {
   return (
-    <Calculator title="Free Bet Calculator"></Calculator>
-  )
+    <>
+      <Tabs />
+      {/* <Calculator title="Free Bet Calculator"></Calculator> */}
+    </>
+  );
 }
 
-export default App
+export default App;

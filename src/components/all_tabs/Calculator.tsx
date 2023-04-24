@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import "../App.css";
+import "../../App.css";
 
 interface Props {
   title: string;

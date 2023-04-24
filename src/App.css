@@ -1,42 +1,66 @@
 #root {
-  max-width: 1280px;
+  width: 100vw;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+/* Tab Container */
+.Tabs {
+  width: auto;
+  height: auto;
+  min-height: 400px;
+  background: rgb(176, 202, 222);
+  margin: 3.5rem auto 1.5rem;
+  padding: 2rem 1rem;
+  border-radius: 2rem;
+  @media (max-width: 769px) {
+    padding: 2rem 0;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.Tabs li {
+  color: #E8F0F2;
+}
+
+/* Tab Navigation */
+ul.nav {
+  width: 60%;
+  margin: 0 auto 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #39A2DB;
+  border-radius: 2rem;
+  @media (max-width: 768px) {
+    width: 90%;
   }
 }
-
-.card {
-  padding: 2em;
+ul.nav li {
+  width: 50%;
+  padding: 1rem;
+  list-style: none;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.7s;
+  border-bottom-left-radius: 2rem;
+  border-top-left-radius: 2rem;
+}
+ul.nav li:nth-child(2) {
+  border-radius: 0;
+  border-bottom-right-radius: 2rem;
+  border-top-right-radius: 2rem;
+}
+ul.nav li:hover {
+  background: rgba(50, 224, 196, 0.15);
+}
+ul.nav li.active {
+  background: #39A2DB;
 }
 
-.read-the-docs {
-  color: #888;
+/* First and Second Tab Styles */
+.FirstTab p,
+.SecondTab p {
+  font-size: 2rem;
+  text-align: center;
 }
