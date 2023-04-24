@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Calculator from "../all_tabs/Calculator.tsx";
+import Calculator from "../all_tabs/FreeBetCalculator.tsx";
 import SecondTab from "../all_tabs/SecondTab.tsx";
 
 const Tabs = () => {
