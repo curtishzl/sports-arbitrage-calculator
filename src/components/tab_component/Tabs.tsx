@@ -29,6 +29,13 @@ const Tabs = () => {
         >
           Tab 2
         </li>
+        <li
+          className={activeTab === "tab3" ? "active" : ""}
+          data-tab="tab3"
+          onClick={handleTabSwitch}
+        >
+          Tab 3
+        </li>
       </ul>
       <div className="outlet">
         {activeTab === "tab1" ? (
