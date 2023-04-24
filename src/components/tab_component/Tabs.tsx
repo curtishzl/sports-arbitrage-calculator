@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import Calculator from "../all_tabs/FreeBetCalculator.tsx";
-import SecondTab from "../all_tabs/SecondTab.tsx";
+import FreeBetCalculator from "../all_tabs/FreeBetCalculator.tsx";
+import BetInsuranceCalculator from "../all_tabs/BetInsuranceCalculator.tsx";
+import MustSpendCalculator from "../all_tabs/MustSpendCalculator.tsx";
 
 const Tabs = () => {
   const [activeTab, setActiveTab] = useState("tab1");
 
   //  Function to handle Tab Switching
   const handleTabSwitch = (event: React.MouseEvent<HTMLLIElement>): void => {
-    const tabName = (event.target as HTMLLIElement).dataset.tab;  // access data-tab attribute, instead of name
+    const tabName = (event.target as HTMLLIElement).dataset.tab; // access data-tab attribute, instead of name
     setActiveTab(tabName || "tab1"); // tab1 is default if invalid tab selected for some reason
   };
 
@@ -20,29 +21,53 @@ const Tabs = () => {
           data-tab="tab1" // <li> cannot have name attributes, instead use data-tab
           onClick={handleTabSwitch}
         >
-          Free Bet
+          FREE BET
         </li>
         <li
           className={activeTab === "tab2" ? "active" : ""}
           data-tab="tab2"
           onClick={handleTabSwitch}
         >
-          Tab 2
+          BET INSURANCE
         </li>
         <li
           className={activeTab === "tab3" ? "active" : ""}
           data-tab="tab3"
           onClick={handleTabSwitch}
         >
-          Tab 3
+          MUST SPEND
         </li>
       </ul>
       <div className="outlet">
-        {activeTab === "tab1" ? (
-          <Calculator title="Free Bet Calculator"></Calculator>
+        {(() => {
+          /* Immediately Invoked Function Expression
+          Example:
+          const result = (function (a, b) {
+            return a * b;
+          })(3, 4);
+          More concisely:
+          const result = ( (a,b) => a*b )(3,4)
+          */
+          switch (activeTab) {
+            case "tab1":
+              return <FreeBetCalculator title="Free Bet Calculator" />;
+            case "tab2":
+              return (
+                <BetInsuranceCalculator title="Bet Insurance Calculator" />
+              );
+            case "tab3":
+              return (
+                <MustSpendCalculator title="Must Spend Calculator" />
+              );
+            default:
+              return <FreeBetCalculator title="Free Bet Calculator" />;
+          }
+        })()}
+        {/* {activeTab === "tab1" ? (
+          <FreeBetCalculator title="Free Bet Calculator"/>
         ) : (
-          <SecondTab />
-        )}
+          <BetInsuranceCalculator title="Bet Insurance Calculator"/>
+        )} */}
         {/* Update with switch structure (if that exists in TS?) for more tabs */}
       </div>
     </div>
