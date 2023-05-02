@@ -17,39 +17,47 @@ The rounded values will also be formatted with +, -, $ and % and formatted to a 
 */
 
 const BetInsuranceCalculator = ({ title }: Props) => {
-  const initFreeBetOdds = -110;
-  const initFreeBetAmount = "$ 10"; // Stored as string because of $ inside editable textfield
+  const initInsuredBetOdds = -110;
+  const initInsuredBetAmount = "$ 10"; // Stored as string because of $ inside editable textfield
   const initHedgeBetOdds = -110;
+  const initPercentInsured = "100 %";
+  const initPercentConversion = "60 %";
   const initHedgeBetAmount = getHedgeAmount(
-    initFreeBetOdds,
-    initFreeBetAmount,
-    initHedgeBetOdds
+    initInsuredBetOdds,
+    initInsuredBetAmount,
+    initHedgeBetOdds,
+    initPercentInsured,
+    initPercentConversion
   );
-  const initPercentConversion = getPercentConversion(
-    initFreeBetOdds,
-    initHedgeBetOdds
+  const initPayout = getPayout(initInsuredBetOdds, initInsuredBetAmount);
+  const initProfit = getProfit(
+    initPayout,
+    initInsuredBetAmount,
+    initHedgeBetAmount
   );
-  const initPayout = getPayout(initHedgeBetOdds, initHedgeBetAmount);
-  const initProfit = getProfit(initPayout, initHedgeBetAmount);
   const [values, setValues] = useState({
-    freeBetOdds: initFreeBetOdds,
-    freeBetAmount: initFreeBetAmount,
+    insuredBetOdds: initInsuredBetOdds,
+    insuredBetAmount: initInsuredBetAmount,
+    percentInsured: initPercentInsured,
+    percentConversion: initPercentConversion,
     hedgeBetOdds: initHedgeBetOdds,
     hedgeBetAmount: initHedgeBetAmount,
-    percentConversion: initPercentConversion,
     payout: initPayout,
     profit: initProfit,
   });
 
   // Selects the whole textfield on click for easier input
   const handleInputClick = useCallback(
-    (startRange = 0) =>
+    (
+        startRange = 0,
+        endRange = 0 // selects [startRange : target.value.length + endRange]
+      ) =>
       (event: React.MouseEvent<HTMLInputElement>) => {
         const target = event.target as HTMLInputElement;
-        if (startRange == 0) {
+        if (startRange == 0 && endRange == 0) {
           target.select();
         } else {
-          target.setSelectionRange(startRange, target.value.length);
+          target.setSelectionRange(startRange, target.value.length + endRange);
         }
       },
     []
@@ -60,6 +68,8 @@ const BetInsuranceCalculator = ({ title }: Props) => {
   const textfield1 = useRef<HTMLInputElement>(null);
   const textfield2 = useRef<HTMLInputElement>(null);
   const textfield3 = useRef<HTMLInputElement>(null);
+  const textfield4 = useRef<HTMLInputElement>(null);
+  const textfield5 = useRef<HTMLInputElement>(null);
   const handleKeyDown = useCallback(
     (
       event: React.KeyboardEvent<HTMLInputElement>,
@@ -68,11 +78,20 @@ const BetInsuranceCalculator = ({ title }: Props) => {
       if (event.key === "Enter" && nextInputRef.current) {
         event.preventDefault();
         nextInputRef.current.focus();
-        if (nextInputRef.current.name === "freeBetAmount") {
+        if (nextInputRef.current.name === "insuredBetAmount") {
           // HARDCODED - FIX FOR REUSABILITY
           nextInputRef.current.setSelectionRange(
             2,
             nextInputRef.current.value.length
+          );
+        } else if (
+          nextInputRef.current.name === "percentInsured" ||
+          nextInputRef.current.name === "percentConversion"
+        ) {
+          // HARDCODED - FIX FOR REUSABILITY
+          nextInputRef.current.setSelectionRange(
+            0,
+            nextInputRef.current.value.length - 2
           );
         } else {
           nextInputRef.current.select();
@@ -86,8 +105,13 @@ const BetInsuranceCalculator = ({ title }: Props) => {
   // Does not recalculate - useEffect does this.
   const handleValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
-    if (name === "freeBetAmount") {
+    if (name === "insuredBetAmount") {
       const regex = /^\$ (\d*?\.?\d{0,2})$/; // Matches a dollar value
+      if (regex.test(value) || value === "") {
+        setValues({ ...values, [name]: value });
+      }
+    } else if (name === "percentInsured" || name === "percentConversion") {
+      const regex = /^(\d*\.?\d*) %$/; // Matches a percent value
       if (regex.test(value) || value === "") {
         setValues({ ...values, [name]: value });
       }
@@ -98,32 +122,41 @@ const BetInsuranceCalculator = ({ title }: Props) => {
     }
   };
 
-  // Recalculates hedge bet amount and percent conversion based on new user input
+  // Recalculates hedge bet amount based on new user input
   useEffect(() => {
     let hedge = 0;
-    let percent = 0;
     try {
       hedge = getHedgeAmount(
-        values.freeBetOdds,
-        values.freeBetAmount,
-        values.hedgeBetOdds
+        values.insuredBetOdds,
+        values.insuredBetAmount,
+        values.hedgeBetOdds,
+        values.percentInsured,
+        values.percentConversion
       );
-      percent = getPercentConversion(values.freeBetOdds, values.hedgeBetOdds);
     } catch (error) {} // If improper American odds have been entered
     setValues({
       ...values,
       hedgeBetAmount: hedge,
-      percentConversion: percent,
     });
-  }, [values.freeBetOdds, values.hedgeBetOdds, values.freeBetAmount]); // Listens for a change to any of the values in the dependency array.
+  }, [
+    values.insuredBetOdds,
+    values.hedgeBetOdds,
+    values.insuredBetAmount,
+    values.percentInsured,
+    values.percentConversion,
+  ]); // Listens for a change to any of the values in the dependency array.
 
   // Recalculates payout and profit when hedge bet amount is updated
   useEffect(() => {
     let payout = 0;
     let profit = 0;
     try {
-      payout = getPayout(values.hedgeBetOdds, values.hedgeBetAmount);
-      profit = getProfit(payout, values.hedgeBetAmount);
+      payout = getPayout(values.insuredBetOdds, values.insuredBetAmount);
+      profit = getProfit(
+        payout,
+        values.insuredBetAmount,
+        values.hedgeBetAmount
+      );
     } catch (error) {} // If improper American odds have been entered
     setValues({
       ...values,
@@ -157,16 +190,23 @@ const BetInsuranceCalculator = ({ title }: Props) => {
   }
 
   function getHedgeAmount(
-    freeBetOdds: number,
-    freeBetAmount: string,
-    hedgeBetOdds: number
+    insuredBetOdds: number,
+    insuredBetAmount: string,
+    hedgeBetOdds: number,
+    percentInsured: string,
+    percentConversion: string
   ): number {
+    const insuredBetAmountNum = Number(insuredBetAmount.substring(2));
+    const fractionInsured = Number(percentInsured.slice(0, -2)) / 100;
+    const fractionConversion = Number(percentConversion.slice(0, -2)) / 100;
     return (
-      ((a2e(freeBetOdds) - 1) * Number(freeBetAmount.substring(2))) /
+      (a2e(insuredBetOdds) * insuredBetAmountNum -
+        insuredBetAmountNum * fractionInsured * fractionConversion) /
       a2e(hedgeBetOdds)
     );
   }
 
+  // REPLACE WITH METRIC FOR MEASURING QUALITY OF ODDS
   function getPercentConversion(
     freeBetOdds: number,
     hedgeBetOdds: number
@@ -174,12 +214,16 @@ const BetInsuranceCalculator = ({ title }: Props) => {
     return (a2e(freeBetOdds) - 1) * (1 - 1 / a2e(hedgeBetOdds)) * 100; // Calculates % using only the given odds
   }
 
-  function getPayout(hedgeBetOdds: number, hedgeBetAmount: number): number {
-    return a2e(hedgeBetOdds) * hedgeBetAmount;
+  function getPayout(insuredBetOdds: number, insuredBetAmount: string): number {
+    return a2e(insuredBetOdds) * Number(insuredBetAmount.substring(2));
   }
 
-  function getProfit(payout: number, hedgeBetAmount: number): number {
-    return payout - hedgeBetAmount;
+  function getProfit(
+    payout: number,
+    insuredBetAmount: string,
+    hedgeBetAmount: number
+  ): number {
+    return payout - Number(insuredBetAmount.substring(2)) - hedgeBetAmount;
   }
 
   return (
@@ -195,13 +239,13 @@ const BetInsuranceCalculator = ({ title }: Props) => {
         </thead>
         <tbody>
           <tr>
-            <th scope="row">Free Bet</th>
+            <th scope="row">Insured Bet</th>
             <td>
               <input
                 type="number"
-                name="freeBetOdds"
+                name="insuredBetOdds"
                 placeholder="-110"
-                value={values.freeBetOdds || ""}
+                value={values.insuredBetOdds || ""}
                 ref={textfield1}
                 onKeyDown={(event) => handleKeyDown(event, textfield2)}
                 onChange={handleValueChange}
@@ -211,11 +255,11 @@ const BetInsuranceCalculator = ({ title }: Props) => {
             <td>
               <input
                 type="text"
-                name="freeBetAmount"
+                name="insuredBetAmount"
                 placeholder="$ 0"
-                value={values.freeBetAmount}
+                value={values.insuredBetAmount}
                 ref={textfield3}
-                onKeyDown={(event) => handleKeyDown(event, textfield1)}
+                onKeyDown={(event) => handleKeyDown(event, textfield4)}
                 onChange={handleValueChange}
                 onClick={handleInputClick(2)}
               ></input>
@@ -251,6 +295,43 @@ const BetInsuranceCalculator = ({ title }: Props) => {
       <table className="table">
         <thead>
           <tr>
+            <th scope="col">% Insured</th>
+            <th scope="col">% Free Bet Conversion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <input
+                type="text"
+                name="percentInsured"
+                placeholder="100 %"
+                value={values.percentInsured}
+                ref={textfield4}
+                onKeyDown={(event) => handleKeyDown(event, textfield5)}
+                onChange={handleValueChange}
+                onClick={handleInputClick(0, -2)}
+              ></input>
+            </td>
+            <td>
+              <input
+                type="text"
+                name="percentConversion"
+                placeholder="100 %"
+                value={values.percentConversion}
+                ref={textfield5}
+                onKeyDown={(event) => handleKeyDown(event, textfield1)}
+                onChange={handleValueChange}
+                onClick={handleInputClick(0, -2)}
+              ></input>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="table">
+        <thead>
+          <tr>
             <th scope="col">% of Free Bet</th>
             <th scope="col">Payout</th>
             <th scope="col">Profit</th>
@@ -263,7 +344,7 @@ const BetInsuranceCalculator = ({ title }: Props) => {
                 type="text"
                 name="percentConversion"
                 placeholder="0 %"
-                value={(values.percentConversion.toFixed(2) || "--") + " %"}
+                value={values.percentConversion}
                 onChange={handleValueChange}
                 readOnly
               ></input>
