@@ -35,6 +35,11 @@ const BetInsuranceCalculator = ({ title }: Props) => {
     initInsuredBetAmount,
     initHedgeBetAmount
   );
+  const initPercentGainOnInsuredAmount = getPercentGainOnInsuredAmount(
+    initProfit,
+    initInsuredBetAmount,
+    initPercentInsured
+  );
   const [values, setValues] = useState({
     insuredBetOdds: initInsuredBetOdds,
     insuredBetAmount: initInsuredBetAmount,
@@ -42,6 +47,7 @@ const BetInsuranceCalculator = ({ title }: Props) => {
     percentConversion: initPercentConversion,
     hedgeBetOdds: initHedgeBetOdds,
     hedgeBetAmount: initHedgeBetAmount,
+    percentGainOnInsuredAmount: initPercentGainOnInsuredAmount,
     payout: initPayout,
     profit: initProfit,
   });
@@ -150,6 +156,7 @@ const BetInsuranceCalculator = ({ title }: Props) => {
   useEffect(() => {
     let payout = 0;
     let profit = 0;
+    let percentGainOnInsuredAmount = 0;
     try {
       payout = getPayout(values.insuredBetOdds, values.insuredBetAmount);
       profit = getProfit(
@@ -157,11 +164,17 @@ const BetInsuranceCalculator = ({ title }: Props) => {
         values.insuredBetAmount,
         values.hedgeBetAmount
       );
+      percentGainOnInsuredAmount = getPercentGainOnInsuredAmount(
+        profit,
+        values.insuredBetAmount,
+        values.percentInsured
+      );
     } catch (error) {} // If improper American odds have been entered
     setValues({
       ...values,
       payout: payout,
       profit: profit,
+      percentGainOnInsuredAmount: percentGainOnInsuredAmount,
     });
   }, [values.hedgeBetAmount]);
 
@@ -206,12 +219,21 @@ const BetInsuranceCalculator = ({ title }: Props) => {
     );
   }
 
-  // REPLACE WITH METRIC FOR MEASURING QUALITY OF ODDS
-  function getPercentConversion(
-    freeBetOdds: number,
-    hedgeBetOdds: number
+  // ' % of insured amount ' is a metric for measuring the quality of odds
+  // returns 1 + profit / (insured bet amt * insured %)
+  // For example: if 50% of a $40 bet was insured ($20 total insurance) and the guaranteed payout was $44, then the % of insured bet would be 110%.
+  function getPercentGainOnInsuredAmount(
+    profit: number,
+    insuredBetAmount: string,
+    percentInsured: string
   ): number {
-    return (a2e(freeBetOdds) - 1) * (1 - 1 / a2e(hedgeBetOdds)) * 100; // Calculates % using only the given odds
+    return (
+      100 *
+      (profit /
+        ((Number(insuredBetAmount.substring(2)) *
+          Number(percentInsured.slice(0, -2))) /
+          100))
+    );
   }
 
   function getPayout(insuredBetOdds: number, insuredBetAmount: string): number {
@@ -296,7 +318,7 @@ const BetInsuranceCalculator = ({ title }: Props) => {
         <thead>
           <tr>
             <th scope="col">% Insured</th>
-            <th scope="col">% Free Bet Conversion</th>
+            <th scope="col">Assumed % Free Bet Conversion</th>
           </tr>
         </thead>
         <tbody>
@@ -332,7 +354,7 @@ const BetInsuranceCalculator = ({ title }: Props) => {
       <table className="table">
         <thead>
           <tr>
-            <th scope="col">% of Free Bet</th>
+            <th scope="col">% Gain on Insured Amount</th>
             <th scope="col">Payout</th>
             <th scope="col">Profit</th>
           </tr>
@@ -342,9 +364,11 @@ const BetInsuranceCalculator = ({ title }: Props) => {
             <td>
               <input
                 type="text"
-                name="percentConversion"
+                name="percentGainOnInsuredAmount"
                 placeholder="0 %"
-                value={values.percentConversion}
+                value={
+                  (values.percentGainOnInsuredAmount.toFixed(2) || "--") + " %"
+                }
                 onChange={handleValueChange}
                 readOnly
               ></input>
