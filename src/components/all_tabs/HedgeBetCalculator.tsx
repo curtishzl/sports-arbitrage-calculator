@@ -16,7 +16,7 @@ We want to keep the rounded values that appear on the screen separate from the a
 The rounded values will also be formatted with +, -, $ and % and formatted to a constant number of decimal places.
 */
 
-const BetInsuranceCalculator = ({ title }: Props) => {
+const HedgeBetCalculator = ({ title }: Props) => {
   const initFreeBetOdds = -110;
   const initFreeBetAmount = "$ 10"; // Stored as string because of $ inside editable textfield
   const initHedgeBetOdds = -110;
@@ -295,4 +295,4 @@ const BetInsuranceCalculator = ({ title }: Props) => {
   );
 };
 
-export default BetInsuranceCalculator;
+export default HedgeBetCalculator;

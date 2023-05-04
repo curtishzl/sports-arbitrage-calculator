@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import FreeBetCalculator from "../all_tabs/FreeBetCalculator.tsx";
 import BetInsuranceCalculator from "../all_tabs/BetInsuranceCalculator.tsx";
-import MustSpendCalculator from "../all_tabs/MustSpendCalculator.tsx";
+import HedgeBetCalculator from "../all_tabs/HedgeBetCalculator.tsx";
 
 const Tabs = () => {
   const [activeTab, setActiveTab] = useState("tab1");
@@ -21,21 +21,21 @@ const Tabs = () => {
           data-tab="tab1" // <li> cannot have name attributes, instead use data-tab
           onClick={handleTabSwitch}
         >
-          FREE BET
+          HEDGE BET
         </li>
         <li
           className={activeTab === "tab2" ? "active" : ""}
           data-tab="tab2"
           onClick={handleTabSwitch}
         >
-          BET INSURANCE
+          FREE BET
         </li>
         <li
           className={activeTab === "tab3" ? "active" : ""}
           data-tab="tab3"
           onClick={handleTabSwitch}
         >
-          MUST SPEND
+          BET INSURANCE
         </li>
       </ul>
       <div className="outlet">
@@ -50,17 +50,15 @@ const Tabs = () => {
           */
           switch (activeTab) {
             case "tab1":
-              return <FreeBetCalculator title="Free Bet Calculator" />;
+              return <HedgeBetCalculator title="Hedge Bet Calculator" />;
             case "tab2":
+              return <FreeBetCalculator title="Free Bet Calculator" />;
+            case "tab3":
               return (
                 <BetInsuranceCalculator title="Bet Insurance Calculator" />
               );
-            case "tab3":
-              return (
-                <MustSpendCalculator title="Must Spend Calculator" />
-              );
             default:
-              return <FreeBetCalculator title="Free Bet Calculator" />;
+              return <HedgeBetCalculator title="Free Bet Calculator" />;
           }
         })()}
         {/* {activeTab === "tab1" ? (
